@@ -10,7 +10,7 @@
 #define LIB_CLASSPATH "..\\javalib\\target\\lib\\javalib-0.0.1-SNAPSHOT.jar"
 #define JNA_CLASSPATH "..\\javalib\\target\\lib\\jna-4.0.0.jar"
 
-int InitJava (JNIEnv *env, JavaVM *jvm, const wchar_t *path)
+int InitJNA (JNIEnv *env, JavaVM *jvm, const wchar_t *path)
 {
 	jclass         cls;
 	jmethodID      mid;
@@ -123,8 +123,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	TCHAR path[MAX_PATH];
 	GetModuleFileName(NULL, path, MAX_PATH);
-	InitJava(env,jvm,path);
-	char const script[] = "lib.nativeadd(4,2);";
+	InitJNA(env,jvm,path);
+	char const script[] = "nativelib.nativeadd(4,2);";
 	CallJs(env,jvm,script);
 
 	jvm->DestroyJavaVM();
