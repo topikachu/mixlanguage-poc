@@ -9,8 +9,13 @@ public class JSInterp {
 	static NativeLib NATIVE_LIB_INSTANCE;
 
 	public static void init(String nativepath) {
+		try {
 		NATIVE_LIB_INSTANCE = (NativeLib) Native.loadLibrary(nativepath,
 				NativeLib.class);
+		NATIVE_LIB_INSTANCE.nativeadd(1, 2);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void run(String script) {

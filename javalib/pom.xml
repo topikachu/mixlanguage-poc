@@ -54,6 +54,19 @@
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
 					<execution>
+	                        <id>copy</id>
+	                        <phase>install</phase>
+	                        <goals>
+	                            <goal>copy-dependencies</goal>
+	                        </goals>
+	                        <configuration>
+	                            <outputDirectory>
+	                              ${project.build.directory}/lib
+	                            </outputDirectory>
+	                            <includeScope>runtime</includeScope>
+	                        </configuration>
+                    </execution>
+					<execution>
 						<id>copy-self</id>
 						<phase>install</phase>
 						<goals>
