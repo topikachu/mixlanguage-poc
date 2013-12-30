@@ -9,7 +9,8 @@
 #include "nativeapi.h"
 #define LIB_CLASSPATH "..\\javalib\\target\\lib\\javalib-0.0.1-SNAPSHOT.jar"
 #define JNA_CLASSPATH "..\\javalib\\target\\lib\\jna-4.0.0.jar"
-
+#define RHINO_CLASSPATH "..\\javalib\\target\\lib\\js-1.7R2.jar"
+#define USER_CLASSPATH LIB_CLASSPATH";"JNA_CLASSPATH";"RHINO_CLASSPATH
 int InitJNA (JNIEnv *env, JavaVM *jvm, const wchar_t *path)
 {
 	jclass         cls;
@@ -111,7 +112,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	vm_args.nOptions =2;
 	vm_args.options=options;
 	options[0].optionString = "-Djava.compiler=NONE"; /* disable JIT */
-	options[1].optionString = "-Djava.class.path="LIB_CLASSPATH";"JNA_CLASSPATH; /* user classes */
+	options[1].optionString = "-Djava.class.path="USER_CLASSPATH; /* user classes */
 
 
 	/* Create the Java VM */
