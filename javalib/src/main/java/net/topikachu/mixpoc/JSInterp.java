@@ -2,14 +2,18 @@ package net.topikachu.mixpoc;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.swing.WindowConstants;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.tools.debugger.Dim;
 import org.mozilla.javascript.tools.debugger.Main;
 import org.mozilla.javascript.tools.debugger.ScopeProvider;
+import org.mozilla.javascript.tools.debugger.SwingGui;
+import org.mozilla.javascript.tools.shell.Global;
 
 import com.sun.jna.Native;
 
@@ -17,7 +21,7 @@ public class JSInterp {
 	static NativeLib NATIVE_LIB_INSTANCE;
 
 	public static void init(String nativepath) {
-		
+
 		try {
 			NATIVE_LIB_INSTANCE = (NativeLib) Native.loadLibrary(nativepath,
 					NativeLib.class);
@@ -40,43 +44,58 @@ public class JSInterp {
 	//
 
 	public static void run(String script) {
-	
+
 		try {
 			boolean debug = true;
-			ContextFactory ctxFac;
+			ContextFactory factory = ContextFactory.getGlobal();
+			final Global global = new Global();
+			global.init(factory);
+			global.setIn(System.in);
+			global.setOut(System.out);
+			global.setErr(System.err);
+			
+			
+			final Dim dim = new Dim();
+			dim.setScopeProvider(new ScopeProvider() {
 
-			if (debug) {
-				ctxFac = org.mozilla.javascript.tools.shell.Main.shellContextFactory;
-				Main.mainEmbedded(ctxFac, new ScopeProvider() {
-					public Scriptable getScope() {
-						return org.mozilla.javascript.tools.shell.Main
-								.getGlobal();
-					}
-				}, "Taglib JavaScript");
-			} else {
-				ctxFac = Context.enter().getFactory();
-			}
-
-			Context cx = ctxFac.enterContext();
+				@Override
+				public Scriptable getScope() {
+					// TODO Auto-generated method stub
+					return global;
+				}
+			});
+			final SwingGui gui = new SwingGui(dim, "am");
+			gui.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);			
+			dim.setBreakOnExceptions(true);
+			dim.setBreak();
+			dim.attachTo(factory);
+			gui.pack();
+			gui.setSize(600, 460);
+			gui.setVisible(true);
 			try {
 				// Set version to JavaScript1.2 so that we get object-literal
 				// style
 				// printing instead of "[object Object]"
+				Context cx = factory.enterContext();
 				cx.setLanguageVersion(Context.VERSION_1_2);
 
 				// Initialize the standard objects (Object, Function, etc.)
 				// This must be done before scripts can be executed.
 				Scriptable scope = cx.initStandardObjects();
-				ScriptableObject.putProperty(scope, "nativelib", NATIVE_LIB_INSTANCE);
+				ScriptableObject.putProperty(scope, "nativelib",
+						NATIVE_LIB_INSTANCE);
 				// Now we can evaluate a script. Let's create a new object
 				// using the object literal notation.
-				Object result = cx.evaluateString(scope, script, "MySource",
-						1, null);
+				Object result = cx.evaluateString(scope, script, "MySource", 1,
+						null);
 
 				System.out.println(String.format("script return value %s",
 						result));
+				
 			} finally {
 				Context.exit();
+				dim.detach();
+				gui.dispose();
 			}
 
 		} catch (Throwable e) {
@@ -84,4 +103,5 @@ public class JSInterp {
 		}
 
 	}
+
 }
