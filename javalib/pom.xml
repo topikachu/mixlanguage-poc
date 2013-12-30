@@ -7,18 +7,14 @@
 
 
 	<dependencies>
-		<dependency>
-			<groupId>net.java.dev.jna</groupId>
-			<artifactId>jna</artifactId>
-			<version>4.0.0</version>
-		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8</version>
 			<scope>test</scope>
 		</dependency>
-<dependency>
+		<dependency>
 			<groupId>rhino</groupId>
 			<artifactId>js</artifactId>
 			<version>1.7R2</version>
@@ -59,18 +55,18 @@
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
 					<execution>
-	                        <id>copy</id>
-	                        <phase>install</phase>
-	                        <goals>
-	                            <goal>copy-dependencies</goal>
-	                        </goals>
-	                        <configuration>
-	                            <outputDirectory>
-	                              ${project.build.directory}/lib
-	                            </outputDirectory>
-	                            <includeScope>runtime</includeScope>
-	                        </configuration>
-                    </execution>
+						<id>copy</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>
+								${project.build.directory}/lib
+							</outputDirectory>
+							<includeScope>runtime</includeScope>
+						</configuration>
+					</execution>
 					<execution>
 						<id>copy-self</id>
 						<phase>install</phase>
@@ -87,7 +83,7 @@
 								</artifactItem>
 							</artifactItems>
 							<outputDirectory>${project.build.directory}/lib</outputDirectory>
-		
+
 						</configuration>
 					</execution>
 				</executions>

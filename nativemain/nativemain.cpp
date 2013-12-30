@@ -8,45 +8,27 @@
 #include <stdlib.h>
 #include "nativeapi.h"
 #define LIB_CLASSPATH "..\\javalib\\target\\lib\\javalib-0.0.1-SNAPSHOT.jar"
-#define JNA_CLASSPATH "..\\javalib\\target\\lib\\jna-4.0.0.jar"
+//#define JNA_CLASSPATH "..\\javalib\\target\\lib\\jna-4.0.0.jar"
 #define RHINO_CLASSPATH "..\\javalib\\target\\lib\\js-1.7R2.jar"
-#define USER_CLASSPATH LIB_CLASSPATH";"JNA_CLASSPATH";"RHINO_CLASSPATH
-int InitJNA (JNIEnv *env, JavaVM *jvm, const wchar_t *path)
+#define USER_CLASSPATH LIB_CLASSPATH";"RHINO_CLASSPATH
+int registerJniMethod (JNIEnv *env, JavaVM *jvm, const wchar_t *path)
 {
+
+
 	jclass         cls;
-	jmethodID      mid;
-	jstring         jstr;
-
-
 	/* locate and load the class file */
-	if ((cls = env->FindClass( "net/topikachu/mixpoc/JSInterp")) == 0) 
+	if ((cls = env->FindClass( "net/topikachu/mixpoc/NativeLib")) == 0) 
 	{
 		fprintf(stderr, "Can't find class %s\n", "JSInterp");
 		exit( -1);
 	}
+	static JNINativeMethod methods[] = {
+		{"nativeadd",    "(II)I",                    Java_net_topikachu_mixpoc_NativeLib_nativeadd},
 
-	/* locate the main method */
-	if ((mid = env->GetStaticMethodID( cls, "init", "(Ljava/lang/String;)V")) == 0) 
-	{
-		fprintf(stderr, "Can't find init method in class %s\n", "JSInterp");
-		exit( -1);
-	}
-	/* create a new java string to be passes to the class */
-	if ((jstr = env->NewString(( jchar *) path,_tcslen(path))) == 0) 
-	{
-		fprintf(stderr, "Out of memory\n");
-		exit( -1);
-	}
+	};
 
-
-
-
-
-
-	/* call the main method with the required arguments */
-
-	/* call the main method with the required arguments */
-	env->CallStaticVoidMethod( cls, mid, jstr);
+	env->RegisterNatives( cls,
+		methods, sizeof(methods)/sizeof(methods[0]));
 
 	return 0;
 }
@@ -68,11 +50,29 @@ int CallJs(JNIEnv *env, JavaVM *jvm, const char *script)
 	}
 
 	/* locate the main method */
-	if ((mid = env->GetStaticMethodID( cls, "run", "(Ljava/lang/String;)V")) == 0) 
+	if ((mid = env->GetStaticMethodID( cls, "run", "(Lnet/topikachu/mixpoc/NativeLib;Ljava/lang/String;)V")) == 0) 
 	{
 		fprintf(stderr, "Can't find run method in class %s\n", "JSInterp");
 		exit( -1);
 	}
+
+
+	jclass		clsNativeLib	;
+	/* locate and load the class file */
+	if ((clsNativeLib = env->FindClass( "net/topikachu/mixpoc/NativeLib")) == 0) 
+	{
+		fprintf(stderr, "Can't find class %s\n", "NativeLib");
+		exit( -1);
+	}
+
+
+
+	jmethodID nativeLibCntr
+		= env->GetMethodID(clsNativeLib,"<init>","()V");
+
+	jobject nativeLibInstance 
+		= env->NewObject(clsNativeLib,nativeLibCntr);
+
 	/* create a new java string to be passes to the class */
 	if ((jstr = env->NewStringUTF( script)) == 0) 
 	{
@@ -88,8 +88,20 @@ int CallJs(JNIEnv *env, JavaVM *jvm, const char *script)
 	/* call the main method with the required arguments */
 
 	/* call the main method with the required arguments */
-	env->CallStaticVoidMethod( cls, mid, jstr);
+	env->CallStaticVoidMethod( cls, mid, nativeLibInstance, jstr);
 
+
+	if ( NULL != nativeLibInstance )
+	{
+		/* we know myObj is a valid local ref, so use it */
+		jclass myClazz = env->GetObjectClass( nativeLibInstance);
+
+		/* uses of myObj and myClazz, etc. but no new local refs */
+
+		/* Without the following calls, we would leak */
+		env->DeleteLocalRef(  nativeLibInstance ); 
+		env->DeleteLocalRef(  clsNativeLib );
+	}
 	return 0;
 }
 
@@ -124,8 +136,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	TCHAR path[MAX_PATH];
 	GetModuleFileName(NULL, path, MAX_PATH);
-	InitJNA(env,jvm,path);
-	char const script[] = "nativelib.nativeadd(4,2);";
+	registerJniMethod(env,jvm,path);
+	char const script[] = "var i=1;\nvar j=2;\nnativelib.nativeadd(i,j);\n";
 	CallJs(env,jvm,script);
 
 	jvm->DestroyJavaVM();

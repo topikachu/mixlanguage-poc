@@ -2,12 +2,13 @@
 #ifndef _NATIVEAPI_H
 #define _NATIVEAPI_H
 
-#define NATIVELIB_API __declspec(dllexport)
+#include <jni.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-NATIVELIB_API int nativeadd(int a,int b);
+JNIEXPORT jint JNICALL Java_net_topikachu_mixpoc_NativeLib_nativeadd
+  (JNIEnv *, jobject, jint, jint);
 
 
 #ifdef __cplusplus

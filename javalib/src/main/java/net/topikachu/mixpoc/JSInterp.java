@@ -1,33 +1,22 @@
 package net.topikachu.mixpoc;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.swing.WindowConstants;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
-import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.tools.debugger.Dim;
-import org.mozilla.javascript.tools.debugger.Main;
 import org.mozilla.javascript.tools.debugger.ScopeProvider;
 import org.mozilla.javascript.tools.debugger.SwingGui;
 import org.mozilla.javascript.tools.shell.Global;
 
-import com.sun.jna.Native;
+
 
 public class JSInterp {
-	static NativeLib NATIVE_LIB_INSTANCE;
 
 	public static void init(String nativepath) {
 
-		try {
-			NATIVE_LIB_INSTANCE = (NativeLib) Native.loadLibrary(nativepath,
-					NativeLib.class);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
 	}
 
 	// public static void run(String script) {
@@ -43,9 +32,10 @@ public class JSInterp {
 	// }
 	//
 
-	public static void run(String script) {
+	public static void run(NativeLib nativelib, String script) {
 
 		try {
+
 			boolean debug = true;
 			ContextFactory factory = ContextFactory.getGlobal();
 			final Global global = new Global();
@@ -53,8 +43,7 @@ public class JSInterp {
 			global.setIn(System.in);
 			global.setOut(System.out);
 			global.setErr(System.err);
-			
-			
+
 			final Dim dim = new Dim();
 			dim.setScopeProvider(new ScopeProvider() {
 
@@ -65,7 +54,7 @@ public class JSInterp {
 				}
 			});
 			final SwingGui gui = new SwingGui(dim, "am");
-			gui.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);			
+			gui.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			dim.setBreakOnExceptions(true);
 			dim.setBreak();
 			dim.attachTo(factory);
@@ -82,8 +71,7 @@ public class JSInterp {
 				// Initialize the standard objects (Object, Function, etc.)
 				// This must be done before scripts can be executed.
 				Scriptable scope = cx.initStandardObjects();
-				ScriptableObject.putProperty(scope, "nativelib",
-						NATIVE_LIB_INSTANCE);
+				ScriptableObject.putProperty(scope, "nativelib", nativelib);
 				// Now we can evaluate a script. Let's create a new object
 				// using the object literal notation.
 				Object result = cx.evaluateString(scope, script, "MySource", 1,
@@ -91,7 +79,7 @@ public class JSInterp {
 
 				System.out.println(String.format("script return value %s",
 						result));
-				
+
 			} finally {
 				Context.exit();
 				dim.detach();
